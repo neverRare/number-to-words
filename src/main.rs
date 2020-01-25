@@ -15,11 +15,18 @@ fn main() {
             Ok(num) => num,
             Err(_) => continue,
         };
-        println!("= {}", wordify(input, 0));
+        let output = match wordify(input, 0) {
+            Ok(words) => words,
+            Err(_) => {
+                continue;
+            },
+        };
+        println!("= {}", output);
     }
 }
-fn wordify_ones(num: u64) -> String {
-    String::from(match num {
+fn wordify_ones(num: u64) -> Result<String, String> {
+    Ok(String::from(match num {
+        0 => "zero",
         1 => "one",
         2 => "two",
         3 => "three",
@@ -29,23 +36,22 @@ fn wordify_ones(num: u64) -> String {
         7 => "seven",
         8 => "eight",
         9 => "nine",
-        0 => panic!("zero should be handled earlier"),
-        _ => panic!("invalid number"),
-    })
+        _ => {
+            return Err(format!("{} is not a 1 digit number", num));
+        },
+    }))
 }
-fn wordify_tens(num: u64) -> String {
-    /*
+fn wordify_tens(num: u64) -> Result<String, String> {
     if num == 0 {
-        return String::from("zero");
+        return Ok(String::from("zero"));
     }
-    */
     let ones = num % 10;
     let tens = (num - ones) / 10;
     if tens == 0 {
         return wordify_ones(ones);
     }
     if tens == 1 {
-        return String::from(match ones {
+        return Ok(String::from(match ones {
             0 => "ten",
             1 => "eleven",
             2 => "twelve",
@@ -56,8 +62,10 @@ fn wordify_tens(num: u64) -> String {
             7 => "seventeen",
             8 => "eighteen",
             9 => "nineteen",
-            _ => panic!("invalid number"),
-        });
+            _ => {
+                return Err(String::from("invalid number"));
+            },
+        }));
     }
     let tens_str = String::from(match tens {
         2 => "twenty",
@@ -68,35 +76,35 @@ fn wordify_tens(num: u64) -> String {
         7 => "seventy",
         8 => "eighty",
         9 => "ninety",
-        _ => panic!("invalid number"),
+        _ => {
+            return Err(String::from("invalid number"));
+        },
     });
-    if ones == 0 {
+    Ok(if ones == 0 {
         format!("{}", tens_str)
     } else {
-        format!("{}-{}", tens_str, wordify_ones(ones))
-    }
+        format!("{}-{}", tens_str, wordify_ones(ones)?)
+    })
 }
-fn wordify_hundreds(num: u64) -> String {
-    /*
+fn wordify_hundreds(num: u64) -> Result<String, String> {
     if num == 0 {
-        return String::from("zero");
+        return Ok(String::from("zero"));
     }
-    */
     let all_tens = num % 100;
     let hundreds = (num - all_tens) / 100;
     if hundreds == 0 {
         return wordify_tens(all_tens);
     }
-    let hundreds_str = wordify_ones(hundreds);
-    if all_tens == 0 {
+    let hundreds_str = wordify_ones(hundreds)?;
+    Ok(if all_tens == 0 {
         format!("{} hundred", hundreds_str)
     } else {
-        format!("{} hundred {}", hundreds_str, wordify_tens(all_tens))
-    }
+        format!("{} hundred {}", hundreds_str, wordify_tens(all_tens)?)
+    })
 }
-fn get_thousand_word(place: u32) -> String {
-    String::from(match place {
-        0 => panic!("zero place should be handled earlier"),
+fn get_thousand_word(place: u32) -> Result<String, String> {
+    Ok(String::from(match place {
+        0 => "",
         1 => "thousand",
         2 => "million",
         3 => "billion",
@@ -110,24 +118,27 @@ fn get_thousand_word(place: u32) -> String {
         11 => "decillion",
         12 => "undecillion",
         13 => "dodecacillion",
-        _ => panic!("place overflow"),
-    })
+        _ => {
+            return Err(String::from("overflow"));
+        },
+    }))
 }
-fn wordify(num: u64, thousandth_place: u32) -> String {
+fn wordify(num: u64, thousandth_place: u32) -> Result<String, String> {
     if num == 0 {
-        return String::from("zero");
+        return Ok(String::from("zero"));
     }
     let all_hundreds = num % 1000;
     let rest = (num - all_hundreds) / 1000;
-    let hundreds_str = wordify_hundreds(all_hundreds);
-    let rest_str = wordify(rest, thousandth_place + 1);
-    return if all_hundreds == 0 {
+    let hundreds_str = wordify_hundreds(all_hundreds)?;
+    let rest_str = wordify(rest, thousandth_place + 1)?;
+    let place = get_thousand_word(thousandth_place)?;
+    return Ok(if all_hundreds == 0 {
         rest_str
     } else if rest == 0 {
         if thousandth_place == 0 {
             format!("{}", hundreds_str)
         } else {
-            format!("{} {}", hundreds_str, get_thousand_word(thousandth_place))
+            format!("{} {}", hundreds_str, place)
         }
     } else if thousandth_place == 0 {
         format!("{} {}", rest_str, hundreds_str)
@@ -136,7 +147,7 @@ fn wordify(num: u64, thousandth_place: u32) -> String {
             "{} {} {}",
             rest_str,
             hundreds_str,
-            get_thousand_word(thousandth_place)
+            place
         )
-    };
+    });
 }
