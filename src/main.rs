@@ -132,7 +132,7 @@ fn wordify(num: u64, thousandth_place: u32) -> Result<String, String> {
     let hundreds_str = wordify_hundreds(all_hundreds)?;
     let rest_str = wordify(rest, thousandth_place + 1)?;
     let place = get_thousand_word(thousandth_place)?;
-    return Ok(if all_hundreds == 0 {
+    if all_hundreds == 0 {
         rest_str
     } else if rest == 0 {
         if thousandth_place == 0 {
@@ -149,5 +149,5 @@ fn wordify(num: u64, thousandth_place: u32) -> Result<String, String> {
             hundreds_str,
             place
         )
-    });
+    })
 }
