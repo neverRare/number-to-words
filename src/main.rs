@@ -117,7 +117,7 @@ fn get_thousand_word(place: u32) -> Result<String, String> {
         10 => "nonillion",
         11 => "decillion",
         12 => "undecillion",
-        13 => "dodecacillion",
+        13 => "duodecillion",
         _ => {
             return Err(String::from("overflow"));
         }
